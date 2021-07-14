@@ -17,6 +17,10 @@ func check(e error) {
 }
 
 func main() {
+	if len(os.Args) <= 1 {
+		fmt.Printf("Usage 'go run main.go [file]'\n")
+		os.Exit(0)
+	}
 	filename := os.Args[1]
 
 	dat, err := ioutil.ReadFile(filename)
@@ -26,9 +30,18 @@ func main() {
 	r, c := getDims(lines)
 
 	m := makeMatrix(lines, r, c)
+	negativeMatrix := mat.NewDense(r, c, make([]float64, r*c))
+	negativeMatrix.Apply(func(i, j int, v float64) float64 {
+		return -1
+	}, negativeMatrix)
 
 	fa := mat.Formatted(m, mat.Prefix("    "), mat.Squeeze())
 	fmt.Printf("a = %v\n\n", fa)
+
+	m.MulElem(m, negativeMatrix)
+	fat := mat.Formatted(m.T(), mat.Prefix("    "), mat.Squeeze())
+	fmt.Printf("a = %v\n\n", fat)
+
 	rows, cols := m.Dims()
 	fmt.Printf("(%v, %v)\n", rows, cols)
 
