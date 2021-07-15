@@ -7,6 +7,7 @@ import (
 	"strconv"
 	s "strings"
 
+	"example.com/m/lp"
 	mat "gonum.org/v1/gonum/mat"
 )
 
@@ -30,6 +31,11 @@ func main() {
 	}
 
 	r, c := getDims(lines)
+
+	l := lp.New(r, c)
+
+	l.Get_xb()
+
 	m := makeMatrix(lines, r, c)
 	nMatrix := makeNegMatrix(r, c)
 
