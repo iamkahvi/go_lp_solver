@@ -27,25 +27,33 @@ func (lp lp) Print() {
 	fm = mat.Formatted(lp.c_vec.T(), mat.Prefix("    "), mat.Squeeze())
 	fmt.Fprintf(os.Stderr, "c = %v\n\n", fm)
 
-	fmt.Println(lp.B)
-	fmt.Println(lp.N)
+	fmt.Fprintf(os.Stderr, "B = %v\n\n", lp.B)
+	fmt.Fprintf(os.Stderr, "N = %v\n\n", lp.N)
 }
 
 func (lp lp) Get_Ab() *mat.Dense {
 	n := mat.NewDense(lp.r, len(lp.B), nil)
-	for _, ind := range lp.B {
-		fmt.Fprintln(os.Stderr, lp.A.ColView(ind).(*mat.VecDense).RawVector().Data)
-		// n.SetCol(i, lp.A.ColView(ind).(*mat.VecDense).RawVector().Data)
+	for i, ind := range lp.B {
+		col := make([]float64, lp.r)
+
+		mat.Col(col, ind, lp.A)
+		n.SetCol(i, col)
 	}
 	return n
 }
 
-// func (lp lp) Get_An() *mat.Dense {
+func (lp lp) Get_An() *mat.Dense {
+	n := mat.NewDense(lp.r, len(lp.N), nil)
+	for i, ind := range lp.N {
+		col := make([]float64, lp.r)
 
-// }
+		mat.Col(col, ind, lp.A)
+		n.SetCol(i, col)
+	}
+	return n
+}
 
 // func (lp lp) Get_xb() *mat.VecDense {
-
 // }
 
 // func (lp lp) Get_xn() *mat.VecDense {
@@ -60,41 +68,37 @@ func (lp lp) Get_Ab() *mat.Dense {
 
 // }
 
-func New(m [][]float64, r int, c int) *lp {
-	width := r + c - 2
-	height := r - 1
+func New(matr [][]float64, r int, c int) *lp {
+	m := r - 1
+	n := c - 1
 
-	A := mat.NewDense(height, width, nil)
-	b_vec := mat.NewVecDense(height, nil)
-	c_vec := mat.NewVecDense(width, nil)
-	B := make([]int, r)
-	N := make([]int, width-r)
+	A := mat.NewDense(m, n+m, nil)
+	b_vec := mat.NewVecDense(m, nil)
+	c_vec := mat.NewVecDense(n+m, nil)
+	B := make([]int, m)
+	N := make([]int, n)
 
-	for i := 0; i < width; i++ {
-		if i <= len(m[0])-1 {
-			c_vec.SetVec(i, m[0][i])
+	for i := 0; i < n+m; i++ {
+		if i < n {
+			c_vec.SetVec(i, matr[0][i])
+			N[i] = i
 		} else {
 			c_vec.SetVec(i, 0)
-		}
-
-		if i < r {
-			B[i] = i
-		} else {
-			N[i%r] = i
+			B[i-n] = i
 		}
 	}
 
-	for i := 1; i <= height; i++ {
-		for j := 0; j < width; j++ {
-			if j < c-1 {
-				A.Set(i-1, j, m[i][j])
+	for i := 1; i <= m; i++ {
+		for j := 0; j < n+m; j++ {
+			if j < n {
+				A.Set(i-1, j, matr[i][j])
 			} else {
-				if j%(c-1) == i-1 {
+				if j%n == i-1 {
 					A.Set(i-1, j, 1)
 				}
 			}
 		}
-		b_vec.SetVec(i-1, m[i][c-1])
+		b_vec.SetVec(i-1, matr[i][n])
 	}
 
 	rA, cA := A.Dims()
