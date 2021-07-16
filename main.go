@@ -40,12 +40,6 @@ func main() {
 
 	lp := lp.New(m, r, c)
 
-	fm := mat.Formatted(lp.Get_Ab(), mat.Prefix("    "), mat.Squeeze())
-	fmt.Fprintf(os.Stderr, "Ab= %v\n\n", fm)
-
-	fm = mat.Formatted(lp.Get_An(), mat.Prefix("    "), mat.Squeeze())
-	fmt.Fprintf(os.Stderr, "An= %v\n\n", fm)
-
 	lp.Print()
 }
 
