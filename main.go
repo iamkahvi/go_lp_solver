@@ -31,37 +31,19 @@ func main() {
 	}
 
 	r, c := getDims(lines)
+	m := parseElements(lines, r, c)
 
-	l := lp.New(r, c)
+	// fmt.Fprintf(os.Stderr, "%v\n", m)
+	// for _, row := range m {
+	// 	fmt.Fprintf(os.Stderr, "%v\n", row)
+	// }
 
-	l.Get_xb()
+	lp := lp.New(m, r, c)
 
-	m := makeMatrix(lines, r, c)
-	nMatrix := makeNegMatrix(r, c)
+	fm := mat.Formatted(lp.Get_Ab(), mat.Prefix("    "), mat.Squeeze())
+	fmt.Fprintf(os.Stderr, "Ab= %v\n\n", fm)
 
-	fm := mat.Formatted(m, mat.Prefix("    "), mat.Squeeze())
-	fmt.Printf("a = %v\n\n", fm)
-
-	// inverseMatrix := mat.NewDense(r, c, make([]float64, r*c))
-	// inverseMatrix.Inverse(m)
-	// fim := mat.Formatted(inverseMatrix, mat.Prefix("    "), mat.Squeeze())
-	// fmt.Printf("a = %v\n\n", fim)
-
-	negMatrix := mat.NewDense(r, c, make([]float64, r*c))
-	negMatrix.MulElem(m, nMatrix)
-	fat := mat.Formatted(negMatrix.T(), mat.Prefix("    "), mat.Squeeze())
-	fmt.Printf("a = %v\n\n", fat)
-
-	vct := mat.Formatted(m.ColView(0))
-	fmt.Printf("%v\n\n", vct)
-
-	rw := mat.Formatted(m.RowView(0))
-	fmt.Printf("%v\n\n", rw)
-
-	rows, cols := m.Dims()
-	fmt.Printf("(%v, %v)\n", rows, cols)
-
-	fmt.Printf("matrix: %T\n", m)
+	lp.Print()
 }
 
 func makeNegMatrix(rows int, cols int) *mat.Dense {
@@ -72,20 +54,22 @@ func makeNegMatrix(rows int, cols int) *mat.Dense {
 	return negativeMatrix
 }
 
-func makeMatrix(lines []string, rows int, cols int) *mat.Dense {
-	m := mat.NewDense(rows, cols, nil)
+func parseElements(lines []string, rows int, cols int) [][]float64 {
+	numbers := make([][]float64, rows)
 
 	for i, line := range lines {
 		els := s.Fields(line)
 
+		numbers[i] = make([]float64, cols)
+
 		for j, str := range els {
 			val, err := strconv.ParseFloat(str, 64)
 			check(err)
-			m.Set(i, j, val)
+			numbers[i][j] = val
 		}
 	}
 
-	return m
+	return numbers
 }
 
 func getDims(lines []string) (int, int) {
