@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	s "strings"
+	"time"
 
 	"example.com/m/lp"
 	mat "gonum.org/v1/gonum/mat"
@@ -33,29 +34,75 @@ func main() {
 	r, c := getDims(lines)
 	m := parseElements(lines, r, c)
 
-	i := lp.New(m, r, c)
+	lpi := lp.New(m, r, c)
 
-	i.Print()
-
-	if !i.Is_Feasible() {
+	if !lpi.Is_Feasible() {
 		panic("Initial basis is not feasible")
 	}
 
 	for {
+		lpi.Print()
 		// zb <- 0
-		i.Z_vec = lp.Set_V(mat.NewVecDense(len(i.B), nil), i.Z_vec, i.B)
+		lpi.Z_vec = lp.Set_V(mat.NewVecDense(len(lpi.B), nil), lpi.Z_vec, lpi.B)
 		// zn <- complicated shit
-		i.Z_vec = lp.Set_V(i.Make_Z_N(), i.Z_vec, i.N)
+		lpi.Z_vec = lp.Set_V(lpi.Make_Z_N(), lpi.Z_vec, lpi.N)
 
-		if mat.Min(i.Z_N()) > 0 {
+		if mat.Min(lpi.Z_N()) > 0 {
 			fmt.Fprintf(os.Stderr, "Found optimal")
 			break
 		}
 
 		// Choose entering variable
-		_ = lp.Max_Index(i.Z_N())
+		zn_i := lp.Min_Index(lpi.Z_N())
+		j := lpi.N[zn_i]
 
-		break
+		fmt.Fprintf(os.Stderr, "j = %v\n\n", j)
+
+		lp.Debug("Z", lpi.Z_vec)
+		lp.Debug("Zn", lpi.Z_N())
+
+		fmt.Fprintf(os.Stderr, "%v\n", j)
+
+		// Choosing a leaving variable
+		lpi.TX_vec = lp.Set_V(lpi.Make_TX_B(j), lpi.TX_vec, lpi.B)
+
+		tXB := lp.Get_V(lpi.TX_vec, lpi.B)
+		XB := lp.Get_V(lpi.X_vec, lpi.B)
+
+		// Creating xb/txb
+		v := mat.NewVecDense(tXB.Len(), nil)
+		v.DivElemVec(XB, tXB)
+
+		lp.Debug("XB", XB)
+		lp.Debug("tXB", tXB)
+		lp.Debug("X", lpi.X_vec)
+
+		// Find min index for t
+		xb_i := lp.Min_Index(v)
+		t := v.AtVec(xb_i)
+		i := lpi.B[xb_i]
+
+		fmt.Fprintf(os.Stderr, "i = %v\n\n", i)
+		fmt.Fprintf(os.Stderr, "t = %v\n\n", t)
+
+		// i = 3
+		// j = 0
+
+		// Updating xb
+		v2 := mat.NewVecDense(XB.Len(), nil)
+		tXB.ScaleVec(t, tXB)
+		v2.SubVec(XB, tXB)
+		lpi.X_vec = lp.Set_V(v2, lpi.X_vec, lpi.B)
+
+		lpi.X_vec.SetVec(j, t)
+
+		fmt.Fprintf(os.Stderr, "Pick %v and %v\n", j, i)
+
+		lpi.B = lp.Swap(i, j, lpi.B)
+		lpi.N = lp.Swap(j, i, lpi.N)
+
+		time.Sleep(1 * time.Second)
+		fmt.Fprintln(os.Stderr, "-----------------")
 
 		// tX_B := i.Make_Theta_X_B(j)
 
