@@ -6,7 +6,7 @@ import (
 )
 
 func Swap(in int, out int, arr []int) []int {
-	for el, i := range arr {
+	for i, el := range arr {
 		if el == out {
 			arr[i] = in
 		}

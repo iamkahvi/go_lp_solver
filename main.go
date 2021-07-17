@@ -56,14 +56,12 @@ func main() {
 		zn_i := lp.Min_Index(lpi.Z_N())
 		j := lpi.N[zn_i]
 
-		fmt.Fprintf(os.Stderr, "j = %v\n\n", j)
-
 		lp.Debug("Z", lpi.Z_vec)
 		lp.Debug("Zn", lpi.Z_N())
 
-		fmt.Fprintf(os.Stderr, "%v\n", j)
-
 		// Choosing a leaving variable
+
+		// Construct theta x vector
 		lpi.TX_vec = lp.Set_V(lpi.Make_TX_B(j), lpi.TX_vec, lpi.B)
 
 		tXB := lp.Get_V(lpi.TX_vec, lpi.B)
@@ -73,20 +71,21 @@ func main() {
 		v := mat.NewVecDense(tXB.Len(), nil)
 		v.DivElemVec(XB, tXB)
 
+		lp.Debug("X", lpi.X_vec)
 		lp.Debug("XB", XB)
 		lp.Debug("tXB", tXB)
-		lp.Debug("X", lpi.X_vec)
 
 		// Find min index for t
 		xb_i := lp.Min_Index(v)
 		t := v.AtVec(xb_i)
 		i := lpi.B[xb_i]
 
-		fmt.Fprintf(os.Stderr, "i = %v\n\n", i)
-		fmt.Fprintf(os.Stderr, "t = %v\n\n", t)
+		fmt.Fprintf(os.Stderr, "j = %v, zj = %v\n", j, lpi.Z_vec.AtVec(j))
+		fmt.Fprintf(os.Stderr, "i = %v, xi =  %v\n", i, lpi.X_vec.AtVec(i))
+		fmt.Fprintf(os.Stderr, "t = %v\n", t)
 
-		// i = 3
 		// j = 0
+		// i = 3
 
 		// Updating xb
 		v2 := mat.NewVecDense(XB.Len(), nil)
@@ -96,18 +95,11 @@ func main() {
 
 		lpi.X_vec.SetVec(j, t)
 
-		fmt.Fprintf(os.Stderr, "Pick %v and %v\n", j, i)
-
-		lpi.B = lp.Swap(i, j, lpi.B)
-		lpi.N = lp.Swap(j, i, lpi.N)
+		lpi.B = lp.Swap(j, i, lpi.B)
+		lpi.N = lp.Swap(i, j, lpi.N)
 
 		time.Sleep(1 * time.Second)
-		fmt.Fprintln(os.Stderr, "-----------------")
-
-		// tX_B := i.Make_Theta_X_B(j)
-
-		// theta_xn := mat.NewVecDense(len(lp.N), nil)
-
+		fmt.Fprintf(os.Stderr, "-----------------\n\n")
 	}
 
 }
