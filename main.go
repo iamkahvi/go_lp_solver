@@ -33,14 +33,36 @@ func main() {
 	r, c := getDims(lines)
 	m := parseElements(lines, r, c)
 
-	// fmt.Fprintf(os.Stderr, "%v\n", m)
-	// for _, row := range m {
-	// 	fmt.Fprintf(os.Stderr, "%v\n", row)
-	// }
+	i := lp.New(m, r, c)
 
-	lp := lp.New(m, r, c)
+	i.Print()
 
-	lp.Print()
+	if !i.Is_Feasible() {
+		panic("Initial basis is not feasible")
+	}
+
+	for {
+		// zb <- 0
+		i.Z_vec = lp.Set_V(mat.NewVecDense(len(i.B), nil), i.Z_vec, i.B)
+		// zn <- complicated shit
+		i.Z_vec = lp.Set_V(i.Make_Z_N(), i.Z_vec, i.N)
+
+		if mat.Min(i.Z_N()) > 0 {
+			fmt.Fprintf(os.Stderr, "Found optimal")
+			break
+		}
+
+		// Choose entering variable
+		_ = lp.Max_Index(i.Z_N())
+
+		break
+
+		// tX_B := i.Make_Theta_X_B(j)
+
+		// theta_xn := mat.NewVecDense(len(lp.N), nil)
+
+	}
+
 }
 
 func makeNegMatrix(rows int, cols int) *mat.Dense {

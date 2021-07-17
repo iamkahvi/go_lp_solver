@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"gonum.org/v1/gonum/blas/blas64"
 	mat "gonum.org/v1/gonum/mat"
 )
 
@@ -11,107 +12,148 @@ type lp struct {
 	A     *mat.Dense
 	r     int
 	c     int
-	b_vec *mat.VecDense
-	c_vec *mat.VecDense
+	B_vec *mat.VecDense
+	C_vec *mat.VecDense
+	X_vec *mat.VecDense
+	Z_vec *mat.VecDense
 	B     []int
 	N     []int
 }
 
 func (lp lp) Print() {
-	fmt.Fprintf(os.Stderr, "B = %v\n\n", lp.B)
-	fmt.Fprintf(os.Stderr, "N = %v\n\n", lp.N)
+	fmt.Fprintf(os.Stderr, " B = %v\n\n", lp.B)
+	fmt.Fprintf(os.Stderr, " N = %v\n\n", lp.N)
 
-	fm := mat.Formatted(lp.Get_Ab(), mat.Prefix("    "), mat.Squeeze())
-	fmt.Fprintf(os.Stderr, "Ab= %v\n\n", fm)
+	Debug("A", lp.A)
 
-	fm = mat.Formatted(lp.Get_An(), mat.Prefix("    "), mat.Squeeze())
-	fmt.Fprintf(os.Stderr, "An= %v\n\n", fm)
+	Debug("A_B", lp.A_B())
+	Debug("A_N", lp.A_N())
 
-	fm = mat.Formatted(lp.Get_xb(), mat.Prefix("    "), mat.Squeeze())
-	fmt.Fprintf(os.Stderr, "xb= %v\n\n", fm)
+	Debug("x_B", lp.X_B())
 
-	fm = mat.Formatted(lp.Get_cb(), mat.Prefix("    "), mat.Squeeze())
-	fmt.Fprintf(os.Stderr, "cb= %v\n\n", fm)
+	Debug("c_B", lp.C_B())
+	Debug("c_N", lp.C_N())
 
-	fm = mat.Formatted(lp.Get_cn(), mat.Prefix("    "), mat.Squeeze())
-	fmt.Fprintf(os.Stderr, "cn= %v\n\n", fm)
-
-	fm = mat.Formatted(lp.Get_zn(), mat.Prefix("    "), mat.Squeeze())
-	fmt.Fprintf(os.Stderr, "zn= %v\n\n", fm)
+	Debug("X", lp.X_vec)
 }
 
-func debug(m mat.Matrix) {
-	fm := mat.Formatted(m, mat.Prefix("    "), mat.Squeeze())
-	fmt.Fprintf(os.Stderr, "m = %v\n\n", fm)
+func Debug(s string, m mat.Matrix) {
+	fm := mat.Formatted(m, mat.Prefix("       "), mat.Squeeze())
+	fmt.Fprintf(os.Stderr, "%4s = %v\n\n", s, fm)
 }
 
-func (lp lp) Get_Ab() *mat.Dense {
-	n := mat.NewDense(lp.r, len(lp.B), nil)
-	for i, ind := range lp.B {
-		col := make([]float64, lp.r)
-
-		mat.Col(col, ind, lp.A)
-		n.SetCol(i, col)
-	}
-	return n
+func (lp lp) A_B() *mat.Dense {
+	return Get_M(lp.A, lp.B)
 }
 
-func (lp lp) Get_An() *mat.Dense {
-	n := mat.NewDense(lp.r, len(lp.N), nil)
-	for i, ind := range lp.N {
-		col := make([]float64, lp.r)
-
-		mat.Col(col, ind, lp.A)
-		n.SetCol(i, col)
-	}
-
-	return n
+func (lp lp) A_N() *mat.Dense {
+	return Get_M(lp.A, lp.N)
 }
 
-func (lp lp) Get_xb() *mat.VecDense {
+func (lp lp) X_B() *mat.VecDense {
+	return Get_V(lp.X_vec, lp.B)
+}
+
+func (lp lp) X_N() *mat.VecDense {
+	return Get_V(lp.X_vec, lp.N)
+}
+
+func (lp lp) C_B() *mat.VecDense {
+	return Get_V(lp.C_vec, lp.B)
+}
+
+func (lp lp) C_N() *mat.VecDense {
+	return Get_V(lp.C_vec, lp.N)
+}
+
+func (lp lp) Z_B() *mat.VecDense {
+	return Get_V(lp.Z_vec, lp.B)
+}
+
+func (lp lp) Z_N() *mat.VecDense {
+	return Get_V(lp.Z_vec, lp.N)
+}
+
+func (lp lp) Make_Z_N() *mat.VecDense {
 	n := mat.NewDense(lp.r, lp.r, nil)
-	n.Inverse(lp.Get_Ab())
-
-	nv := mat.NewVecDense(lp.r, nil)
-	nv.MulVec(n, lp.b_vec)
-
-	return nv
-}
-
-func (lp lp) Get_cb() *mat.VecDense {
-	n := mat.NewVecDense(len(lp.B), nil)
-
-	for i, ind := range lp.B {
-		n.SetVec(i, lp.c_vec.AtVec(ind))
-	}
-
-	return n
-}
-
-func (lp lp) Get_zn() *mat.VecDense {
-	n := mat.NewDense(lp.r, lp.r, nil)
-	n.Inverse(lp.Get_Ab())
+	n.Inverse(lp.A_B())
 
 	n2 := mat.NewDense(lp.r, len(lp.N), nil)
-	n2.Mul(n, lp.Get_An())
+	n2.Mul(n, lp.A_N())
 
 	nv := mat.NewVecDense(lp.c-lp.r, nil)
-	nv.MulVec(n2.T(), lp.Get_cb())
+	nv.MulVec(n2.T(), lp.C_B())
 
 	nv2 := mat.NewVecDense(len(lp.N), nil)
-	nv2.SubVec(nv, lp.Get_cn())
+	nv2.SubVec(nv, lp.C_N())
 
 	return nv2
 }
 
-func (lp lp) Get_cn() *mat.VecDense {
-	n := mat.NewVecDense(len(lp.N), nil)
+func (lp lp) Is_Feasible() bool {
+	return mat.Min(lp.X_B()) >= 0
+}
 
-	for i, ind := range lp.N {
-		n.SetVec(i, lp.c_vec.AtVec(ind))
+func (lp lp) Make_Theta_X_B(j int) *mat.VecDense {
+	col := make([]float64, lp.r)
+	mat.Col(col, j, lp.A)
+
+	nv := mat.NewVecDense(lp.r, col)
+	n := mat.NewDense(lp.r, lp.r, nil)
+
+	n.Inverse(lp.A_B())
+	nv.MulVec(n, nv)
+
+	return nv
+}
+
+func Max_Index(v *mat.VecDense) int {
+	return blas64.Iamax(v.RawVector())
+}
+
+func Get_M(m *mat.Dense, ind []int) *mat.Dense {
+	r, _ := m.Dims()
+	n := mat.NewDense(r, len(ind), nil)
+
+	for i, ind := range ind {
+		col := make([]float64, r)
+
+		mat.Col(col, ind, m)
+		n.SetCol(i, col)
 	}
 
 	return n
+}
+
+func Get_V(v *mat.VecDense, ind []int) *mat.VecDense {
+	n := mat.NewVecDense(len(ind), nil)
+
+	for i, ind := range ind {
+		n.SetVec(i, v.AtVec(ind))
+	}
+
+	return n
+}
+
+func Set_M(new *mat.Dense, m *mat.Dense, ind []int) *mat.Dense {
+	r, _ := m.Dims()
+
+	for i, ind := range ind {
+		col := make([]float64, r)
+
+		mat.Col(col, i, new)
+		m.SetCol(ind, col)
+	}
+
+	return m
+}
+
+func Set_V(new *mat.VecDense, m *mat.VecDense, ind []int) *mat.VecDense {
+	for i, ind := range ind {
+		m.SetVec(ind, new.AtVec(i))
+	}
+
+	return m
 }
 
 func New(matr [][]float64, r int, c int) *lp {
@@ -119,17 +161,19 @@ func New(matr [][]float64, r int, c int) *lp {
 	n := c - 1
 
 	A := mat.NewDense(m, n+m, nil)
-	b_vec := mat.NewVecDense(m, nil)
-	c_vec := mat.NewVecDense(n+m, nil)
+	B_vec := mat.NewVecDense(m, nil)
+	C_vec := mat.NewVecDense(n+m, nil)
+	X_vec := mat.NewVecDense(n+m, nil)
+	Z_vec := mat.NewVecDense(n+m, nil)
 	B := make([]int, m)
 	N := make([]int, n)
 
 	for i := 0; i < n+m; i++ {
 		if i < n {
-			c_vec.SetVec(i, matr[0][i])
+			C_vec.SetVec(i, matr[0][i])
 			N[i] = i
 		} else {
-			c_vec.SetVec(i, 0)
+			C_vec.SetVec(i, 0)
 			B[i-n] = i
 		}
 	}
@@ -144,15 +188,26 @@ func New(matr [][]float64, r int, c int) *lp {
 				}
 			}
 		}
-		b_vec.SetVec(i-1, matr[i][n])
+		B_vec.SetVec(i-1, matr[i][n])
 	}
+
+	// Setting xb
+	n1 := mat.NewDense(m, m, nil)
+	n1.Inverse(Get_M(A, B))
+
+	xb := mat.NewVecDense(m, nil)
+	xb.MulVec(n1, B_vec)
+
+	X_vec = Set_V(xb, X_vec, B)
 
 	return &lp{
 		A:     A,
 		r:     m,
 		c:     n + m,
-		b_vec: b_vec,
-		c_vec: c_vec,
+		B_vec: B_vec,
+		C_vec: C_vec,
+		X_vec: X_vec,
+		Z_vec: Z_vec,
 		B:     B,
 		N:     N,
 	}
