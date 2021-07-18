@@ -2,7 +2,7 @@
 
 cd ./test_LPs/input/
 
-# go --version
+# # go --version
 
 for file in vanderbei*.txt
 do
@@ -13,7 +13,7 @@ done
 
 # cd ../../test_LPs_volume2/input/
 
-# # go --version
+# # # go --version
 
 # for file in *.txt
 # do

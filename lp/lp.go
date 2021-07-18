@@ -132,10 +132,6 @@ func (lp LP) Is_Dual_Feasible() bool {
 	return mat.Max(lp.C_vec) <= 0
 }
 
-func (lp LP) Is_InFeasible() bool {
-	return mat.Min(lp.X_B()) < 0
-}
-
 func (lp LP) Is_Unbounded() bool {
 	return !(mat.Max(lp.DX_vec) > 0)
 }
