@@ -7,7 +7,7 @@ import (
 	mat "gonum.org/v1/gonum/mat"
 )
 
-type lp struct {
+type LP struct {
 	A      *mat.Dense
 	r      int
 	c      int
@@ -20,7 +20,7 @@ type lp struct {
 	N      []int
 }
 
-func New(matr [][]float64, r int, c int) *lp {
+func New(matr [][]float64, r int, c int) *LP {
 	m := r - 1
 	n := c - 1
 
@@ -56,7 +56,7 @@ func New(matr [][]float64, r int, c int) *lp {
 		B_vec.SetVec(i-1, matr[i][n])
 	}
 
-	return &lp{
+	return &LP{
 		A:      A,
 		r:      m,
 		c:      n + m,
@@ -70,7 +70,7 @@ func New(matr [][]float64, r int, c int) *lp {
 	}
 }
 
-func (lp lp) Print() {
+func (lp LP) Print() {
 	fmt.Fprintf(os.Stderr, " B = %v\n\n", lp.B)
 	fmt.Fprintf(os.Stderr, " N = %v\n\n", lp.N)
 
@@ -92,39 +92,47 @@ func Debug(s string, m mat.Matrix) {
 	fmt.Fprintf(os.Stderr, "%4s = %v\n\n", s, fm)
 }
 
-func (lp lp) A_B() *mat.Dense {
+func (lp LP) A_B() *mat.Dense {
 	return Get_M(lp.A, lp.B)
 }
 
-func (lp lp) A_N() *mat.Dense {
+func (lp LP) A_N() *mat.Dense {
 	return Get_M(lp.A, lp.N)
 }
 
-func (lp lp) X_B() *mat.VecDense {
+func (lp LP) X_B() *mat.VecDense {
 	return Get_V(lp.X_vec, lp.B)
 }
 
-func (lp lp) X_N() *mat.VecDense {
+func (lp LP) X_N() *mat.VecDense {
 	return Get_V(lp.X_vec, lp.N)
 }
 
-func (lp lp) C_B() *mat.VecDense {
+func (lp LP) C_B() *mat.VecDense {
 	return Get_V(lp.C_vec, lp.B)
 }
 
-func (lp lp) C_N() *mat.VecDense {
+func (lp LP) C_N() *mat.VecDense {
 	return Get_V(lp.C_vec, lp.N)
 }
 
-func (lp lp) Z_B() *mat.VecDense {
+func (lp LP) Z_B() *mat.VecDense {
 	return Get_V(lp.Z_vec, lp.B)
 }
 
-func (lp lp) Z_N() *mat.VecDense {
+func (lp LP) Z_N() *mat.VecDense {
 	return Get_V(lp.Z_vec, lp.N)
 }
 
-func (lp lp) Make_Z_N() *mat.VecDense {
+func (lp LP) Is_InFeasible() bool {
+	return mat.Min(lp.X_B()) < 0
+}
+
+func (lp LP) Is_Unbounded() bool {
+	return !(mat.Max(lp.DX_vec) > 0)
+}
+
+func (lp LP) Make_Z_N() *mat.VecDense {
 	n := mat.NewDense(lp.r, lp.r, nil)
 	n.Inverse(lp.A_B())
 
@@ -140,7 +148,7 @@ func (lp lp) Make_Z_N() *mat.VecDense {
 	return nv2
 }
 
-func (lp lp) Make_TX_B(j int) *mat.VecDense {
+func (lp LP) Make_TX_B(j int) *mat.VecDense {
 	n := mat.NewDense(lp.r, lp.r, nil)
 	n.Inverse(lp.A_B())
 
@@ -153,7 +161,7 @@ func (lp lp) Make_TX_B(j int) *mat.VecDense {
 	return v
 }
 
-func (lp lp) Make_X_B() *mat.VecDense {
+func (lp LP) Make_X_B() *mat.VecDense {
 	// Setting xb
 	n1 := mat.NewDense(lp.r, lp.r, nil)
 	n1.Inverse(lp.A_B())
@@ -164,11 +172,7 @@ func (lp lp) Make_X_B() *mat.VecDense {
 	return xb
 }
 
-func (lp lp) Is_Feasible() bool {
-	return mat.Min(lp.X_B()) >= 0
-}
-
-func (lp lp) Make_Theta_X_B(j int) *mat.VecDense {
+func (lp LP) Make_Theta_X_B(j int) *mat.VecDense {
 	col := make([]float64, lp.r)
 	mat.Col(col, j, lp.A)
 

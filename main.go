@@ -13,10 +13,31 @@ import (
 	mat "gonum.org/v1/gonum/mat"
 )
 
+const DEBUG bool = false
+
+type Result int
+
+const (
+	Optimal Result = iota
+	Unbounded
+	Infeasible
+)
+
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
+}
+
+func print_arr(arr []int) string {
+	var str string
+	for i, xi := range arr {
+		str += fmt.Sprintf("%v", xi)
+		if i < len(arr)-1 {
+			str += " "
+		}
+	}
+	return str
 }
 
 func main() {
@@ -35,40 +56,50 @@ func main() {
 	r, c := getDims(lines)
 	m := parseElements(lines, r, c)
 
-	lpi := lp.New(m, r, c)
+	l := lp.New(m, r, c)
 
-	if !lpi.Is_Feasible() {
-		panic("Initial basis is not feasible")
+	res, opt, x := PrimalSimplex(l)
+
+	switch res {
+	case Optimal:
+		fmt.Fprintf(os.Stdout, "optimal\n%v\n%v\n", opt, print_arr(x))
+	case Unbounded:
+		fmt.Fprintf(os.Stdout, "unbounded\n")
+	case Infeasible:
+		fmt.Fprintf(os.Stdout, "infeasible\n")
+	}
+}
+
+func PrimalSimplex(l *lp.LP) (Result, float64, []int) {
+	if l.Is_InFeasible() {
+		return Infeasible, 0, nil
 	}
 
 	iteration := 0
 
 	// Setting X_B
-	lpi.X_vec = lp.Set_V(lpi.Make_X_B(), lpi.X_vec, lpi.B)
+	l.X_vec = lp.Set_V(l.Make_X_B(), l.X_vec, l.B)
 
 	for {
 		fmt.Fprintf(os.Stderr, "\niteration %v-----------------\n\n", iteration)
 
-		lpi.Print()
 		// zb <- 0
-		lpi.Z_vec = lp.Set_V(mat.NewVecDense(len(lpi.B), nil), lpi.Z_vec, lpi.B)
+		l.Z_vec = lp.Set_V(mat.NewVecDense(len(l.B), nil), l.Z_vec, l.B)
 		// zn <- complicated shit
-		lpi.Z_vec = lp.Set_V(lpi.Make_Z_N(), lpi.Z_vec, lpi.N)
+		l.Z_vec = lp.Set_V(l.Make_Z_N(), l.Z_vec, l.N)
 
-		if mat.Min(lpi.Z_N()) > 0 {
+		if mat.Min(l.Z_N()) > 0 {
 			matr := mat.NewDense(1, 1, nil)
-			matr.Mul(lpi.C_B().T(), lpi.Make_X_B())
+			matr.Mul(l.C_B().T(), l.Make_X_B())
 
-			v := lpi.X_vec.SliceVec(0, len(lpi.N))
-			row := make([]int, len(lpi.N))
+			v := l.X_vec.SliceVec(0, len(l.N))
+			row := make([]int, len(l.N))
 
-			for i := 0; i < len(lpi.N); i++ {
+			for i := 0; i < len(l.N); i++ {
 				row[i] = int(v.AtVec(i))
 			}
 
-			fmt.Fprintf(os.Stderr, "Optimal value: %v\n%v\n", matr.At(0, 0), row)
-
-			break
+			return Optimal, matr.At(0, 0), row
 		}
 
 		// Choose entering variable
@@ -79,32 +110,32 @@ func main() {
 
 		// Bland's rule
 		var j int
-		for _, ind := range lpi.N {
-			if lpi.Z_vec.AtVec(ind) < 0 {
+		for _, ind := range l.N {
+			if l.Z_vec.AtVec(ind) < 0 {
 				j = ind
 				break
 			}
 		}
 
-		// Change T (theta) to D (delta) everywhere
-
-		lp.Debug("Z", lpi.Z_vec)
-		lp.Debug("Zn", lpi.Z_N())
+		if DEBUG {
+			lp.Debug("Z", l.Z_vec)
+			lp.Debug("Zn", l.Z_N())
+		}
 
 		// Choosing a leaving variable
 
 		// Construct theta x vector
-		lpi.DX_vec = lp.Set_V(lpi.Make_TX_B(j), lpi.DX_vec, lpi.B)
+		l.DX_vec = lp.Set_V(l.Make_TX_B(j), l.DX_vec, l.B)
 
-		dXB := lp.Get_V(lpi.DX_vec, lpi.B)
-		XB := lp.Get_V(lpi.X_vec, lpi.B)
+		dXB := lp.Get_V(l.DX_vec, l.B)
+		XB := lp.Get_V(l.X_vec, l.B)
 
 		// Find min index for t
 		t := math.MaxFloat64
 		i := 0
-		for _, bVal := range lpi.B {
-			x := lpi.X_vec.AtVec(bVal)
-			dx := lpi.DX_vec.AtVec(bVal)
+		for _, bVal := range l.B {
+			x := l.X_vec.AtVec(bVal)
+			dx := l.DX_vec.AtVec(bVal)
 
 			if dx > 0 {
 				val := x / dx
@@ -115,13 +146,19 @@ func main() {
 			}
 		}
 
-		lp.Debug("X", lpi.X_vec)
-		lp.Debug("XB", XB)
-		lp.Debug("dXB", dXB)
+		if l.Is_Unbounded() {
+			return Unbounded, 0, nil
+		}
 
-		fmt.Fprintf(os.Stderr, "j = %v, zj = %v\n", j, lpi.Z_vec.AtVec(j))
-		fmt.Fprintf(os.Stderr, "i = %v, xi =  %v\n", i, lpi.X_vec.AtVec(i))
-		fmt.Fprintf(os.Stderr, "t = %v\n", t)
+		if DEBUG {
+			lp.Debug("X", l.X_vec)
+			lp.Debug("XB", XB)
+			lp.Debug("dXB", dXB)
+
+			fmt.Fprintf(os.Stderr, "j = %v, zj = %v\n", j, l.Z_vec.AtVec(j))
+			fmt.Fprintf(os.Stderr, "i = %v, xi =  %v\n", i, l.X_vec.AtVec(i))
+			fmt.Fprintf(os.Stderr, "t = %v\n", t)
+		}
 
 		// j = 0
 		// i = 3
@@ -130,17 +167,19 @@ func main() {
 		v2 := mat.NewVecDense(XB.Len(), nil)
 		dXB.ScaleVec(t, dXB)
 		v2.SubVec(XB, dXB)
-		lpi.X_vec = lp.Set_V(v2, lpi.X_vec, lpi.B)
+		l.X_vec = lp.Set_V(v2, l.X_vec, l.B)
 
-		lpi.X_vec.SetVec(j, t)
+		l.X_vec.SetVec(j, t)
 
-		lpi.B = lp.Swap(j, i, lpi.B)
-		lpi.N = lp.Swap(i, j, lpi.N)
+		l.B = lp.Swap(j, i, l.B)
+		l.N = lp.Swap(i, j, l.N)
 
 		iteration++
-		time.Sleep(1 * time.Second)
-	}
 
+		if DEBUG {
+			time.Sleep(1 * time.Second)
+		}
+	}
 }
 
 func makeNegMatrix(rows int, cols int) *mat.Dense {
