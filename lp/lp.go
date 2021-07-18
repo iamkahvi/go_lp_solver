@@ -14,7 +14,7 @@ type lp struct {
 	B_vec  *mat.VecDense
 	C_vec  *mat.VecDense
 	X_vec  *mat.VecDense
-	TX_vec *mat.VecDense
+	DX_vec *mat.VecDense
 	Z_vec  *mat.VecDense
 	B      []int
 	N      []int
@@ -28,7 +28,7 @@ func New(matr [][]float64, r int, c int) *lp {
 	B_vec := mat.NewVecDense(m, nil)
 	C_vec := mat.NewVecDense(n+m, nil)
 	X_vec := mat.NewVecDense(n+m, nil)
-	TX_vec := mat.NewVecDense(n+m, nil)
+	DX_vec := mat.NewVecDense(n+m, nil)
 	Z_vec := mat.NewVecDense(n+m, nil)
 	B := make([]int, m)
 	N := make([]int, n)
@@ -48,22 +48,13 @@ func New(matr [][]float64, r int, c int) *lp {
 			if j < n {
 				A.Set(i-1, j, matr[i][j])
 			} else {
-				if j%n == i-1 {
+				if j-n == i-1 {
 					A.Set(i-1, j, 1)
 				}
 			}
 		}
 		B_vec.SetVec(i-1, matr[i][n])
 	}
-
-	// Setting xb
-	n1 := mat.NewDense(m, m, nil)
-	n1.Inverse(Get_M(A, B))
-
-	xb := mat.NewVecDense(m, nil)
-	xb.MulVec(n1, B_vec)
-
-	X_vec = Set_V(xb, X_vec, B)
 
 	return &lp{
 		A:      A,
@@ -72,7 +63,7 @@ func New(matr [][]float64, r int, c int) *lp {
 		B_vec:  B_vec,
 		C_vec:  C_vec,
 		X_vec:  X_vec,
-		TX_vec: TX_vec,
+		DX_vec: DX_vec,
 		Z_vec:  Z_vec,
 		B:      B,
 		N:      N,
@@ -85,8 +76,8 @@ func (lp lp) Print() {
 
 	// Debug("A", lp.A)
 
-	Debug("A_B", lp.A_B())
-	Debug("A_N", lp.A_N())
+	// Debug("A_B", lp.A_B())
+	// Debug("A_N", lp.A_N())
 
 	// Debug("x_B", lp.X_B())
 
@@ -153,12 +144,24 @@ func (lp lp) Make_TX_B(j int) *mat.VecDense {
 	n := mat.NewDense(lp.r, lp.r, nil)
 	n.Inverse(lp.A_B())
 
-	aj := Get_M(lp.A, []int{j}).ColView(0)
+	aj := lp.A.ColView(j)
+	//  Get_M(lp.A, []int{j}).ColView(0)
 
 	v := mat.NewVecDense(aj.Len(), nil)
 	v.MulVec(n, aj)
 
 	return v
+}
+
+func (lp lp) Make_X_B() *mat.VecDense {
+	// Setting xb
+	n1 := mat.NewDense(lp.r, lp.r, nil)
+	n1.Inverse(lp.A_B())
+
+	xb := mat.NewVecDense(lp.r, nil)
+	xb.MulVec(n1, lp.B_vec)
+
+	return xb
 }
 
 func (lp lp) Is_Feasible() bool {

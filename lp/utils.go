@@ -1,6 +1,8 @@
 package lp
 
 import (
+	"math"
+
 	"gonum.org/v1/gonum/blas/blas64"
 	mat "gonum.org/v1/gonum/mat"
 )
@@ -19,12 +21,13 @@ func Max_Index(v *mat.VecDense) int {
 	return blas64.Iamax(v.RawVector())
 }
 
-func Min_Index(v *mat.VecDense) int {
+func Min_Non_Neg_Index(v *mat.VecDense) int {
+	Debug("v", v)
 	ind := 0
-	min := v.AtVec(ind)
+	min := math.MaxFloat64
 	for i := 1; i < v.Len(); i++ {
 		x := v.AtVec(i)
-		if x < min {
+		if x < min && x > 0 {
 			min = x
 			ind = i
 		}

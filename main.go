@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	s "strings"
@@ -40,7 +41,14 @@ func main() {
 		panic("Initial basis is not feasible")
 	}
 
+	iteration := 0
+
+	// Setting X_B
+	lpi.X_vec = lp.Set_V(lpi.Make_X_B(), lpi.X_vec, lpi.B)
+
 	for {
+		fmt.Fprintf(os.Stderr, "\niteration %v-----------------\n\n", iteration)
+
 		lpi.Print()
 		// zb <- 0
 		lpi.Z_vec = lp.Set_V(mat.NewVecDense(len(lpi.B), nil), lpi.Z_vec, lpi.B)
@@ -48,13 +56,37 @@ func main() {
 		lpi.Z_vec = lp.Set_V(lpi.Make_Z_N(), lpi.Z_vec, lpi.N)
 
 		if mat.Min(lpi.Z_N()) > 0 {
-			fmt.Fprintf(os.Stderr, "Found optimal")
+			matr := mat.NewDense(1, 1, nil)
+			matr.Mul(lpi.C_B().T(), lpi.Make_X_B())
+
+			v := lpi.X_vec.SliceVec(0, len(lpi.N))
+			row := make([]int, len(lpi.N))
+
+			for i := 0; i < len(lpi.N); i++ {
+				row[i] = int(v.AtVec(i))
+			}
+
+			fmt.Fprintf(os.Stderr, "Optimal value: %v\n%v\n", matr.At(0, 0), row)
+
 			break
 		}
 
 		// Choose entering variable
-		zn_i := lp.Min_Index(lpi.Z_N())
-		j := lpi.N[zn_i]
+
+		// Largest Increase
+		// zn_i := lp.Min_Index(lpi.Z_N())
+		// j := lpi.N[zn_i]
+
+		// Bland's rule
+		var j int
+		for _, ind := range lpi.N {
+			if lpi.Z_vec.AtVec(ind) < 0 {
+				j = ind
+				break
+			}
+		}
+
+		// Change T (theta) to D (delta) everywhere
 
 		lp.Debug("Z", lpi.Z_vec)
 		lp.Debug("Zn", lpi.Z_N())
@@ -62,23 +94,30 @@ func main() {
 		// Choosing a leaving variable
 
 		// Construct theta x vector
-		lpi.TX_vec = lp.Set_V(lpi.Make_TX_B(j), lpi.TX_vec, lpi.B)
+		lpi.DX_vec = lp.Set_V(lpi.Make_TX_B(j), lpi.DX_vec, lpi.B)
 
-		tXB := lp.Get_V(lpi.TX_vec, lpi.B)
+		dXB := lp.Get_V(lpi.DX_vec, lpi.B)
 		XB := lp.Get_V(lpi.X_vec, lpi.B)
 
-		// Creating xb/txb
-		v := mat.NewVecDense(tXB.Len(), nil)
-		v.DivElemVec(XB, tXB)
+		// Find min index for t
+		t := math.MaxFloat64
+		i := 0
+		for _, bVal := range lpi.B {
+			x := lpi.X_vec.AtVec(bVal)
+			dx := lpi.DX_vec.AtVec(bVal)
+
+			if dx > 0 {
+				val := x / dx
+				if val < t {
+					t = val
+					i = bVal
+				}
+			}
+		}
 
 		lp.Debug("X", lpi.X_vec)
 		lp.Debug("XB", XB)
-		lp.Debug("tXB", tXB)
-
-		// Find min index for t
-		xb_i := lp.Min_Index(v)
-		t := v.AtVec(xb_i)
-		i := lpi.B[xb_i]
+		lp.Debug("dXB", dXB)
 
 		fmt.Fprintf(os.Stderr, "j = %v, zj = %v\n", j, lpi.Z_vec.AtVec(j))
 		fmt.Fprintf(os.Stderr, "i = %v, xi =  %v\n", i, lpi.X_vec.AtVec(i))
@@ -89,8 +128,8 @@ func main() {
 
 		// Updating xb
 		v2 := mat.NewVecDense(XB.Len(), nil)
-		tXB.ScaleVec(t, tXB)
-		v2.SubVec(XB, tXB)
+		dXB.ScaleVec(t, dXB)
+		v2.SubVec(XB, dXB)
 		lpi.X_vec = lp.Set_V(v2, lpi.X_vec, lpi.B)
 
 		lpi.X_vec.SetVec(j, t)
@@ -98,8 +137,8 @@ func main() {
 		lpi.B = lp.Swap(j, i, lpi.B)
 		lpi.N = lp.Swap(i, j, lpi.N)
 
+		iteration++
 		time.Sleep(1 * time.Second)
-		fmt.Fprintf(os.Stderr, "-----------------\n\n")
 	}
 
 }
