@@ -124,6 +124,14 @@ func (lp LP) Z_N() *mat.VecDense {
 	return Get_V(lp.Z_vec, lp.N)
 }
 
+func (lp LP) Is_Primal_Feasible() bool {
+	return mat.Min(lp.B_vec) >= 0
+}
+
+func (lp LP) Is_Dual_Feasible() bool {
+	return mat.Max(lp.C_vec) <= 0
+}
+
 func (lp LP) Is_InFeasible() bool {
 	return mat.Min(lp.X_B()) < 0
 }

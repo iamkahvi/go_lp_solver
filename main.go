@@ -29,10 +29,10 @@ func check(e error) {
 	}
 }
 
-func print_arr(arr []int) string {
+func print_arr(arr []float64) string {
 	var str string
 	for i, xi := range arr {
-		str += fmt.Sprintf("%v", xi)
+		str += fmt.Sprintf("%.7g", xi)
 		if i < len(arr)-1 {
 			str += " "
 		}
@@ -58,11 +58,25 @@ func main() {
 
 	l := lp.New(m, r, c)
 
-	res, opt, x := PrimalSimplex(l)
+	var res Result
+	var opt float64
+	var x []float64
+
+	res = Infeasible
+
+	// is primal feasible
+	if l.Is_Primal_Feasible() {
+		res, opt, x = PrimalSimplex(l)
+	}
+
+	// is dual feasible
+	if l.Is_Dual_Feasible() {
+		fmt.Fprintf(os.Stdout, "DUAL NEEDED")
+	}
 
 	switch res {
 	case Optimal:
-		fmt.Fprintf(os.Stdout, "optimal\n%v\n%v\n", opt, print_arr(x))
+		fmt.Fprintf(os.Stdout, "optimal\n%.7g\n%v\n", opt, print_arr(x))
 	case Unbounded:
 		fmt.Fprintf(os.Stdout, "unbounded\n")
 	case Infeasible:
@@ -70,7 +84,7 @@ func main() {
 	}
 }
 
-func PrimalSimplex(l *lp.LP) (Result, float64, []int) {
+func PrimalSimplex(l *lp.LP) (Result, float64, []float64) {
 	if l.Is_InFeasible() {
 		return Infeasible, 0, nil
 	}
@@ -93,10 +107,10 @@ func PrimalSimplex(l *lp.LP) (Result, float64, []int) {
 			matr.Mul(l.C_B().T(), l.Make_X_B())
 
 			v := l.X_vec.SliceVec(0, len(l.N))
-			row := make([]int, len(l.N))
+			row := make([]float64, len(l.N))
 
 			for i := 0; i < len(l.N); i++ {
-				row[i] = int(v.AtVec(i))
+				row[i] = v.AtVec(i)
 			}
 
 			return Optimal, matr.At(0, 0), row
