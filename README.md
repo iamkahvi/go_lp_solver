@@ -4,4 +4,7 @@ Repo for development of a programming project for CSC445: OPERATIONS RESEARCH: L
 
 ## Usage
 `go build`  
-`go run main.go test_LPs/input/445k21_Lecture01_bakery.txt`
+`go run main.go < [lp]`
+
+## Implementation
+This program is an implementation of the Revised Simplex Method as defined in the lecture slides.

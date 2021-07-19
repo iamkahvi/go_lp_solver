@@ -66,9 +66,11 @@ func main() {
 
 	if l.Is_Primal_Feasible() {
 		// is primal feasible
+		fmt.Fprintf(os.Stderr, "Primal Feasible\n")
 		res, opt, x = PrimalSimplex(l)
 	} else if l.Is_Dual_Feasible() {
 		// is dual feasible
+		fmt.Fprintf(os.Stderr, "Dual Feasible\n")
 		res, opt, x = DualSimplex(l)
 	} else {
 		fmt.Fprintf(os.Stdout, "SOLVE AUX\n")
