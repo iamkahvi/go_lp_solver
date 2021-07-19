@@ -119,7 +119,7 @@ func PrimalSimplex(l *lp.LP) (Result, float64, []float64) {
 		// zn <- complicated shit
 		l.Z_vec = lp.Set_V(l.Make_Z_N(), l.Z_vec, l.N)
 
-		if mat.Min(l.Z_N()) > 0 {
+		if mat.Min(l.Z_N()) >= 0 {
 			matr := mat.NewDense(1, 1, nil)
 			matr.Mul(l.C_B().T(), l.Make_X_B())
 
@@ -151,20 +151,18 @@ func PrimalSimplex(l *lp.LP) (Result, float64, []float64) {
 		// Choosing a leaving variable
 
 		// Construct theta x vector
-		l.DX_vec = lp.Set_V(l.Make_TX_B(j), l.DX_vec, l.B)
-
-		dXB := lp.Get_V(l.DX_vec, l.B)
-		XB := lp.Get_V(l.X_vec, l.B)
+		dX := mat.NewVecDense(l.X_vec.Len(), nil)
+		dX = lp.Set_V(l.Make_TX_B(j), dX, l.B)
 
 		// Find min index for t
 		t := math.MaxFloat64
 		i := 0
 		for _, bVal := range l.B {
-			x := l.X_vec.AtVec(bVal)
-			dx := l.DX_vec.AtVec(bVal)
+			xi := l.X_vec.AtVec(bVal)
+			dxi := dX.AtVec(bVal)
 
-			if dx > 0 {
-				val := x / dx
+			if dxi > 0 {
+				val := xi / dxi
 				if val < t {
 					t = val
 					i = bVal
@@ -172,18 +170,18 @@ func PrimalSimplex(l *lp.LP) (Result, float64, []float64) {
 			}
 		}
 
-		if l.Is_Unbounded() {
+		if mat.Max(dX) <= 0 {
 			return Unbounded, 0, nil
 		}
 
 		if DEBUG {
 			fmt.Fprintf(os.Stderr, "j = %v, zj = %v\n", j, l.Z_vec.AtVec(j))
-			fmt.Fprintf(os.Stderr, "i = %v, xi =  %v\n", i, l.X_vec.AtVec(i))
+			fmt.Fprintf(os.Stderr, "i = %v, xi = %v\n", i, l.X_vec.AtVec(i))
 			fmt.Fprintf(os.Stderr, "t = %v\n", t)
 		}
 
-		// j = 0
-		// i = 3
+		dXB := lp.Get_V(dX, l.B)
+		XB := lp.Get_V(l.X_vec, l.B)
 
 		// Updating xb
 		v2 := mat.NewVecDense(XB.Len(), nil)
@@ -218,14 +216,13 @@ func DualSimplex(l *lp.LP) (Result, float64, []float64) {
 	for {
 		if DEBUG {
 			fmt.Fprintf(os.Stderr, "\niteration %v-----------------\n\n", iteration)
-			// l.Print()
 		}
 
 		// Setting xb and xn
 		l.X_vec = lp.Set_V(l.Make_X_B(), l.X_vec, l.B)
 		l.X_vec = lp.Set_V(mat.NewVecDense(len(l.N), nil), l.X_vec, l.N)
 
-		if mat.Min(l.X_B()) > 0 {
+		if mat.Min(l.X_B()) >= 0 {
 			// Computing optimal
 			matr := mat.NewDense(1, 1, nil)
 			matr.Mul(l.C_B().T(), l.Make_X_B())
@@ -241,6 +238,7 @@ func DualSimplex(l *lp.LP) (Result, float64, []float64) {
 		}
 
 		// Choose leaving variable
+		l.Print()
 
 		// Bland's rule
 		var i int
@@ -311,7 +309,7 @@ func DualSimplex(l *lp.LP) (Result, float64, []float64) {
 		l.N = lp.Swap(i, j, l.N)
 
 		if DEBUG {
-			fmt.Fprintf(os.Stderr, "i = %v, xi =  %v\n", i, l.X_vec.AtVec(i))
+			fmt.Fprintf(os.Stderr, "i = %v, xi = %v\n", i, l.X_vec.AtVec(i))
 			fmt.Fprintf(os.Stderr, "j = %v, zj = %v\n", j, l.Z_vec.AtVec(j))
 			fmt.Fprintf(os.Stderr, "s = %v\n", s)
 		}

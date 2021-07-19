@@ -8,16 +8,15 @@ import (
 )
 
 type LP struct {
-	A      *mat.Dense
-	r      int
-	c      int
-	B_vec  *mat.VecDense
-	C_vec  *mat.VecDense
-	X_vec  *mat.VecDense
-	DX_vec *mat.VecDense
-	Z_vec  *mat.VecDense
-	B      []int
-	N      []int
+	A     *mat.Dense
+	r     int
+	c     int
+	B_vec *mat.VecDense
+	C_vec *mat.VecDense
+	X_vec *mat.VecDense
+	Z_vec *mat.VecDense
+	B     []int
+	N     []int
 }
 
 func New(matr [][]float64, r int, c int) *LP {
@@ -28,7 +27,6 @@ func New(matr [][]float64, r int, c int) *LP {
 	B_vec := mat.NewVecDense(m, nil)
 	C_vec := mat.NewVecDense(n+m, nil)
 	X_vec := mat.NewVecDense(n+m, nil)
-	DX_vec := mat.NewVecDense(n+m, nil)
 	Z_vec := mat.NewVecDense(n+m, nil)
 	B := make([]int, m)
 	N := make([]int, n)
@@ -57,16 +55,15 @@ func New(matr [][]float64, r int, c int) *LP {
 	}
 
 	return &LP{
-		A:      A,
-		r:      m,
-		c:      n + m,
-		B_vec:  B_vec,
-		C_vec:  C_vec,
-		X_vec:  X_vec,
-		DX_vec: DX_vec,
-		Z_vec:  Z_vec,
-		B:      B,
-		N:      N,
+		A:     A,
+		r:     m,
+		c:     n + m,
+		B_vec: B_vec,
+		C_vec: C_vec,
+		X_vec: X_vec,
+		Z_vec: Z_vec,
+		B:     B,
+		N:     N,
 	}
 }
 
@@ -79,9 +76,6 @@ func (lp LP) CloneAux() *LP {
 	var X2_vec mat.VecDense
 	X2_vec.CloneFromVec(lp.X_vec)
 
-	var DX2_vec mat.VecDense
-	DX2_vec.CloneFromVec(lp.DX_vec)
-
 	var Z2_vec mat.VecDense
 	Z2_vec.CloneFromVec(lp.Z_vec)
 
@@ -92,16 +86,15 @@ func (lp LP) CloneAux() *LP {
 	copy(N2, lp.N)
 
 	return &LP{
-		A:      lp.A,
-		r:      lp.r,
-		c:      lp.c,
-		B_vec:  &B2_vec,
-		C_vec:  C2_vec,
-		X_vec:  &X2_vec,
-		DX_vec: &DX2_vec,
-		Z_vec:  &Z2_vec,
-		B:      B2,
-		N:      N2,
+		A:     lp.A,
+		r:     lp.r,
+		c:     lp.c,
+		B_vec: &B2_vec,
+		C_vec: C2_vec,
+		X_vec: &X2_vec,
+		Z_vec: &Z2_vec,
+		B:     B2,
+		N:     N2,
 	}
 }
 
@@ -166,10 +159,6 @@ func (lp LP) Is_Primal_Feasible() bool {
 
 func (lp LP) Is_Dual_Feasible() bool {
 	return mat.Max(lp.C_vec) <= 0
-}
-
-func (lp LP) Is_Unbounded() bool {
-	return !(mat.Max(lp.DX_vec) > 0)
 }
 
 func (lp LP) Make_Z_N() *mat.VecDense {
