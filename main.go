@@ -76,7 +76,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "SOLVE AUX\n")
 		l_aux := l.CloneAux()
 		_, _, _ = DualSimplex(l_aux)
-		fmt.Fprintf(os.Stderr, "SOLVEd AUX\n")
+		fmt.Fprintf(os.Stderr, "SOLVED AUX\n")
 		l.B = l_aux.B
 		l.N = l_aux.N
 		res, opt, x = PrimalSimplex(l)
@@ -105,7 +105,10 @@ func PrimalSimplex(l *lp.LP) (Result, float64, []float64) {
 	}
 
 	for {
-		fmt.Fprintf(os.Stderr, "\niteration %v-----------------\n\n", iteration)
+		if DEBUG {
+			fmt.Fprintf(os.Stderr, "\niteration %v-----------------\n\n", iteration)
+			l.Print()
+		}
 
 		// zb <- 0
 		l.Z_vec = lp.Set_V(mat.NewVecDense(len(l.B), nil), l.Z_vec, l.B)
@@ -141,11 +144,6 @@ func PrimalSimplex(l *lp.LP) (Result, float64, []float64) {
 			}
 		}
 
-		if DEBUG {
-			lp.Debug("Z", l.Z_vec)
-			lp.Debug("Zn", l.Z_N())
-		}
-
 		// Choosing a leaving variable
 
 		// Construct theta x vector
@@ -175,10 +173,6 @@ func PrimalSimplex(l *lp.LP) (Result, float64, []float64) {
 		}
 
 		if DEBUG {
-			lp.Debug("X", l.X_vec)
-			lp.Debug("XB", XB)
-			lp.Debug("dXB", dXB)
-
 			fmt.Fprintf(os.Stderr, "j = %v, zj = %v\n", j, l.Z_vec.AtVec(j))
 			fmt.Fprintf(os.Stderr, "i = %v, xi =  %v\n", i, l.X_vec.AtVec(i))
 			fmt.Fprintf(os.Stderr, "t = %v\n", t)
@@ -220,7 +214,7 @@ func DualSimplex(l *lp.LP) (Result, float64, []float64) {
 	for {
 		if DEBUG {
 			fmt.Fprintf(os.Stderr, "\niteration %v-----------------\n\n", iteration)
-			l.Print()
+			// l.Print()
 		}
 
 		// Setting xb and xn
@@ -313,11 +307,6 @@ func DualSimplex(l *lp.LP) (Result, float64, []float64) {
 		l.N = lp.Swap(i, j, l.N)
 
 		if DEBUG {
-			lp.Debug("X", l.X_vec)
-			lp.Debug("Z", l.Z_vec)
-			lp.Debug("dZ", dZ)
-			lp.Debug("ZB", l.Z_B())
-
 			fmt.Fprintf(os.Stderr, "i = %v, xi =  %v\n", i, l.X_vec.AtVec(i))
 			fmt.Fprintf(os.Stderr, "j = %v, zj = %v\n", j, l.Z_vec.AtVec(j))
 			fmt.Fprintf(os.Stderr, "s = %v\n", s)

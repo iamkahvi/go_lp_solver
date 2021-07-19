@@ -7,4 +7,4 @@ Repo for development of a programming project for CSC445: OPERATIONS RESEARCH: L
 `./solver < [lp]`
 
 ## Implementation
-This program is an implementation of the Revised Simplex Method as defined in the lecture slides.
+This program is an implementation of the Revised Simplex Method using Bland's Rule as defined in the lecture slides.

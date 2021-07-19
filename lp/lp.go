@@ -71,13 +71,10 @@ func New(matr [][]float64, r int, c int) *LP {
 }
 
 func (lp LP) CloneAux() *LP {
-	lp.C_vec.Zero()
-
 	var B2_vec mat.VecDense
 	B2_vec.CloneFromVec(lp.B_vec)
 
-	var C2_vec mat.VecDense
-	C2_vec.CloneFromVec(lp.C_vec)
+	C2_vec := mat.NewVecDense(lp.C_vec.Len(), nil)
 
 	var X2_vec mat.VecDense
 	X2_vec.CloneFromVec(lp.X_vec)
@@ -99,7 +96,7 @@ func (lp LP) CloneAux() *LP {
 		r:      lp.r,
 		c:      lp.c,
 		B_vec:  &B2_vec,
-		C_vec:  &C2_vec,
+		C_vec:  C2_vec,
 		X_vec:  &X2_vec,
 		DX_vec: &DX2_vec,
 		Z_vec:  &Z2_vec,
@@ -112,17 +109,18 @@ func (lp LP) Print() {
 	fmt.Fprintf(os.Stderr, " B = %v\n\n", lp.B)
 	fmt.Fprintf(os.Stderr, " N = %v\n\n", lp.N)
 
-	// Debug("A", lp.A)
+	Debug("A", lp.A)
 
-	// Debug("A_B", lp.A_B())
-	// Debug("A_N", lp.A_N())
+	Debug("A_B", lp.A_B())
+	Debug("A_N", lp.A_N())
 
-	// Debug("x_B", lp.X_B())
+	Debug("x_B", lp.X_B())
 
 	Debug("b", lp.B_vec)
 	Debug("c", lp.C_vec)
 
-	// Debug("X", lp.X_vec)
+	Debug("X", lp.X_vec)
+	Debug("Z", lp.Z_vec)
 }
 
 func Debug(s string, m mat.Matrix) {
@@ -175,19 +173,19 @@ func (lp LP) Is_Unbounded() bool {
 }
 
 func (lp LP) Make_Z_N() *mat.VecDense {
-	n := mat.NewDense(lp.r, lp.r, nil)
+	var n mat.Dense
 	n.Inverse(lp.A_B())
 
-	n2 := mat.NewDense(lp.r, len(lp.N), nil)
-	n2.Mul(n, lp.A_N())
+	var n2 mat.Dense
+	n2.Mul(&n, lp.A_N())
 
-	nv := mat.NewVecDense(lp.c-lp.r, nil)
+	var nv mat.VecDense
 	nv.MulVec(n2.T(), lp.C_B())
 
-	nv2 := mat.NewVecDense(len(lp.N), nil)
-	nv2.SubVec(nv, lp.C_N())
+	var nv2 mat.VecDense
+	nv2.SubVec(&nv, lp.C_N())
 
-	return nv2
+	return &nv2
 }
 
 func (lp LP) Make_TX_B(j int) *mat.VecDense {
