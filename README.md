@@ -1,21 +1,21 @@
 # CSC445 Programming Project 
 
-Repo for development of a programming project for CSC445: OPERATIONS RESEARCH: LINEAR PROGRAMMING in Summer 2021.
+This application is a simple linear program solver built for CSC445: OPERATIONS RESEARCH: LINEAR PROGRAMMING in Summer 2021.
 
 ## Usage
 `rm ._main.go && go build`  
 `./solver < [lp]`
 
 ## Implementation
-This program is an implementation of the Revised Simplex Method using Bland's Rule as defined in the lecture slides.
+This program is an implementation of the Revised Simplex Method using Bland's Rule for pivoting.
 
-I have three packages utils, lp and simplex.
+I have three packages `utils`, `lp` and `simplex`.
 
-lp contains the struct for the LP. So a constructor and the various methods for accessing subsets of the matrices and vectors.
+`lp` contains the struct for the LP. So a constructor and the various methods for accessing subsets of the matrices and vectors.
 
-utils contains functions for various things, mostly indexing matrices and vectors with an array of ints.
+`utils` contains functions for various things, mostly indexing matrices and vectors with an array of ints.
 
-simplex contains both the primal and dual procedures for the solver.
+`simplex` contains both the primal and dual procedures for the solver.
 
 ## Tests
 `sh test.sh`
