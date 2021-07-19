@@ -11,6 +11,8 @@ import (
 	mat "gonum.org/v1/gonum/mat"
 )
 
+const EPSILON = 0
+
 type Result int
 
 const (
@@ -26,7 +28,7 @@ func PrimalSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 	l.X_vec = utils.Set_V(l.Make_X_B(), l.X_vec, l.B)
 	l.X_vec = utils.Set_V(mat.NewVecDense(len(l.N), nil), l.X_vec, l.N)
 
-	if mat.Min(l.X_B()) < 0 {
+	if mat.Min(l.X_B()) < EPSILON {
 		return Infeasible, 0, nil
 	}
 
@@ -41,7 +43,7 @@ func PrimalSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 		l.Z_vec = utils.Set_V(l.Make_Z_N(), l.Z_vec, l.N)
 
 		// Check for optimality
-		if mat.Min(l.Z_N()) >= 0 {
+		if mat.Min(l.Z_N()) >= EPSILON {
 			matr := mat.NewDense(1, 1, nil)
 			matr.Mul(l.C_B().T(), l.Make_X_B())
 
@@ -64,7 +66,7 @@ func PrimalSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 		// Bland's rule
 		var j int
 		for _, ind := range l.N {
-			if l.Z_vec.AtVec(ind) < 0 {
+			if l.Z_vec.AtVec(ind) < EPSILON {
 				j = ind
 				break
 			}
@@ -83,7 +85,7 @@ func PrimalSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 			xi := l.X_vec.AtVec(bVal)
 			dxi := dX.AtVec(bVal)
 
-			if dxi > 0 {
+			if dxi > EPSILON {
 				val := xi / dxi
 				if val < t {
 					t = val
@@ -93,7 +95,7 @@ func PrimalSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 		}
 
 		// Check for unboundedness
-		if mat.Max(dX) <= 0 {
+		if mat.Max(dX) <= EPSILON {
 			return Unbounded, 0, nil
 		}
 

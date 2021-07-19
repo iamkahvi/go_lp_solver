@@ -8,6 +8,8 @@ import (
 	mat "gonum.org/v1/gonum/mat"
 )
 
+const EPSILON = 1e-5
+
 type LP struct {
 	A     *mat.Dense
 	r     int
@@ -155,11 +157,11 @@ func (lp LP) Z_N() *mat.VecDense {
 }
 
 func (lp LP) Is_Primal_Feasible() bool {
-	return mat.Min(lp.B_vec) >= 0
+	return mat.Min(lp.B_vec) >= EPSILON
 }
 
 func (lp LP) Is_Dual_Feasible() bool {
-	return mat.Max(lp.C_vec) <= 0
+	return mat.Max(lp.C_vec) <= EPSILON
 }
 
 func (lp LP) Make_Z_N() *mat.VecDense {
