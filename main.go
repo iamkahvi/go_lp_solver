@@ -32,7 +32,11 @@ func check(e error) {
 func print_arr(arr []float64) string {
 	var str string
 	for i, xi := range arr {
-		str += fmt.Sprintf("%.7g", xi)
+		if xi < 1e-10 {
+			str += "0"
+		} else {
+			str += fmt.Sprintf("%.7g", xi)
+		}
 		if i < len(arr)-1 {
 			str += " "
 		}
