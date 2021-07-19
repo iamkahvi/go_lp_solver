@@ -1,0 +1,34 @@
+# github.com/cznic/cc v0.0.0-20181122101902-d673e9b70d4d
+## explicit
+# github.com/cznic/golex v0.0.0-20181122101858-9c343928389c
+## explicit
+# github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548
+## explicit
+# github.com/cznic/strutil v0.0.0-20181122101858-275e90344537
+## explicit
+# github.com/cznic/xc v0.0.0-20181122101856-45b06973881e
+## explicit
+# github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0
+## explicit
+# golang.org/x/exp v0.0.0-20210625193404-fa9d1d177d71
+## explicit
+# golang.org/x/tools v0.1.4
+## explicit
+# gonum.org/v1/gonum v0.9.2
+## explicit
+gonum.org/v1/gonum/blas
+gonum.org/v1/gonum/blas/blas64
+gonum.org/v1/gonum/blas/cblas128
+gonum.org/v1/gonum/blas/gonum
+gonum.org/v1/gonum/floats
+gonum.org/v1/gonum/floats/scalar
+gonum.org/v1/gonum/internal/asm/c128
+gonum.org/v1/gonum/internal/asm/c64
+gonum.org/v1/gonum/internal/asm/f32
+gonum.org/v1/gonum/internal/asm/f64
+gonum.org/v1/gonum/internal/cmplx64
+gonum.org/v1/gonum/internal/math32
+gonum.org/v1/gonum/lapack
+gonum.org/v1/gonum/lapack/gonum
+gonum.org/v1/gonum/lapack/lapack64
+gonum.org/v1/gonum/mat
