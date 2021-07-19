@@ -1,4 +1,4 @@
-module example.com/m
+module example.com/solver
 
 go 1.14
 

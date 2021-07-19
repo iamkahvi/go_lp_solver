@@ -1,4 +1,4 @@
-package lp
+package utils
 
 import (
 	"math"
@@ -22,7 +22,6 @@ func Max_Index(v *mat.VecDense) int {
 }
 
 func Min_Non_Neg_Index(v *mat.VecDense) int {
-	Debug("v", v)
 	ind := 0
 	min := math.MaxFloat64
 	for i := 1; i < v.Len(); i++ {

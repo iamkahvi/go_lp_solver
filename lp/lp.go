@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"example.com/solver/utils"
 	mat "gonum.org/v1/gonum/mat"
 )
 
@@ -122,35 +123,35 @@ func Debug(s string, m mat.Matrix) {
 }
 
 func (lp LP) A_B() *mat.Dense {
-	return Get_M(lp.A, lp.B)
+	return utils.Get_M(lp.A, lp.B)
 }
 
 func (lp LP) A_N() *mat.Dense {
-	return Get_M(lp.A, lp.N)
+	return utils.Get_M(lp.A, lp.N)
 }
 
 func (lp LP) X_B() *mat.VecDense {
-	return Get_V(lp.X_vec, lp.B)
+	return utils.Get_V(lp.X_vec, lp.B)
 }
 
 func (lp LP) X_N() *mat.VecDense {
-	return Get_V(lp.X_vec, lp.N)
+	return utils.Get_V(lp.X_vec, lp.N)
 }
 
 func (lp LP) C_B() *mat.VecDense {
-	return Get_V(lp.C_vec, lp.B)
+	return utils.Get_V(lp.C_vec, lp.B)
 }
 
 func (lp LP) C_N() *mat.VecDense {
-	return Get_V(lp.C_vec, lp.N)
+	return utils.Get_V(lp.C_vec, lp.N)
 }
 
 func (lp LP) Z_B() *mat.VecDense {
-	return Get_V(lp.Z_vec, lp.B)
+	return utils.Get_V(lp.Z_vec, lp.B)
 }
 
 func (lp LP) Z_N() *mat.VecDense {
-	return Get_V(lp.Z_vec, lp.N)
+	return utils.Get_V(lp.Z_vec, lp.N)
 }
 
 func (lp LP) Is_Primal_Feasible() bool {
