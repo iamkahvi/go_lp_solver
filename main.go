@@ -73,8 +73,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Dual Feasible\n")
 		res, opt, x = DualSimplex(l)
 	} else {
-		fmt.Fprintf(os.Stdout, "SOLVE AUX\n")
-		os.Exit(0)
+		fmt.Fprintf(os.Stderr, "SOLVE AUX\n")
+		l_aux := l.CloneAux()
+		_, _, _ = DualSimplex(l_aux)
+		fmt.Fprintf(os.Stderr, "SOLVEd AUX\n")
+		l.B = l_aux.B
+		l.N = l_aux.N
+		res, opt, x = PrimalSimplex(l)
 	}
 
 	switch res {
@@ -296,7 +301,7 @@ func DualSimplex(l *lp.LP) (Result, float64, []float64) {
 		}
 
 		if mat.Max(dZ) <= 0 {
-			return Unbounded, 0, nil
+			return Infeasible, 0, nil
 		}
 
 		var v mat.VecDense

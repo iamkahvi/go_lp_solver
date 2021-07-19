@@ -70,6 +70,44 @@ func New(matr [][]float64, r int, c int) *LP {
 	}
 }
 
+func (lp LP) CloneAux() *LP {
+	lp.C_vec.Zero()
+
+	var B2_vec mat.VecDense
+	B2_vec.CloneFromVec(lp.B_vec)
+
+	var C2_vec mat.VecDense
+	C2_vec.CloneFromVec(lp.C_vec)
+
+	var X2_vec mat.VecDense
+	X2_vec.CloneFromVec(lp.X_vec)
+
+	var DX2_vec mat.VecDense
+	DX2_vec.CloneFromVec(lp.DX_vec)
+
+	var Z2_vec mat.VecDense
+	Z2_vec.CloneFromVec(lp.Z_vec)
+
+	B2 := make([]int, len(lp.B))
+	copy(B2, lp.B)
+
+	N2 := make([]int, len(lp.N))
+	copy(N2, lp.N)
+
+	return &LP{
+		A:      lp.A,
+		r:      lp.r,
+		c:      lp.c,
+		B_vec:  &B2_vec,
+		C_vec:  &C2_vec,
+		X_vec:  &X2_vec,
+		DX_vec: &DX2_vec,
+		Z_vec:  &Z2_vec,
+		B:      B2,
+		N:      N2,
+	}
+}
+
 func (lp LP) Print() {
 	fmt.Fprintf(os.Stderr, " B = %v\n\n", lp.B)
 	fmt.Fprintf(os.Stderr, " N = %v\n\n", lp.N)
@@ -81,8 +119,8 @@ func (lp LP) Print() {
 
 	// Debug("x_B", lp.X_B())
 
-	// Debug("c_B", lp.C_B())
-	// Debug("c_N", lp.C_N())
+	Debug("b", lp.B_vec)
+	Debug("c", lp.C_vec)
 
 	// Debug("X", lp.X_vec)
 }
