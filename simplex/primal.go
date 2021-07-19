@@ -22,9 +22,8 @@ const (
 func PrimalSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 	iteration := 0
 
-	// Setting xB
+	// Compute X
 	l.X_vec = utils.Set_V(l.Make_X_B(), l.X_vec, l.B)
-	// Setting xN
 	l.X_vec = utils.Set_V(mat.NewVecDense(len(l.N), nil), l.X_vec, l.N)
 
 	if mat.Min(l.X_B()) < 0 {
@@ -37,11 +36,11 @@ func PrimalSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 			l.Print()
 		}
 
-		// zb <- 0
+		// Compute Z
 		l.Z_vec = utils.Set_V(mat.NewVecDense(len(l.B), nil), l.Z_vec, l.B)
-		// zn <- complicated shit
 		l.Z_vec = utils.Set_V(l.Make_Z_N(), l.Z_vec, l.N)
 
+		// Check for optimality
 		if mat.Min(l.Z_N()) >= 0 {
 			matr := mat.NewDense(1, 1, nil)
 			matr.Mul(l.C_B().T(), l.Make_X_B())
@@ -71,13 +70,13 @@ func PrimalSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 			}
 		}
 
-		// Choosing a leaving variable
+		// Choose a leaving variable
 
 		// Construct theta x vector
 		dX := mat.NewVecDense(l.X_vec.Len(), nil)
-		dX = utils.Set_V(l.Make_TX_B(j), dX, l.B)
+		dX = utils.Set_V(l.Make_DX_B(j), dX, l.B)
 
-		// Find min index for t
+		// Find min for i and t
 		t := math.MaxFloat64
 		i := 0
 		for _, bVal := range l.B {
@@ -93,33 +92,34 @@ func PrimalSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 			}
 		}
 
+		// Check for unboundedness
 		if mat.Max(dX) <= 0 {
 			return Unbounded, 0, nil
-		}
-
-		if DEBUG {
-			fmt.Fprintf(os.Stderr, "j = %v, zj = %v\n", j, l.Z_vec.AtVec(j))
-			fmt.Fprintf(os.Stderr, "i = %v, xi = %v\n", i, l.X_vec.AtVec(i))
-			fmt.Fprintf(os.Stderr, "t = %v\n", t)
 		}
 
 		dXB := utils.Get_V(dX, l.B)
 		XB := utils.Get_V(l.X_vec, l.B)
 
-		// Updating xb
+		// Update xb
 		v2 := mat.NewVecDense(XB.Len(), nil)
 		dXB.ScaleVec(t, dXB)
 		v2.SubVec(XB, dXB)
 		l.X_vec = utils.Set_V(v2, l.X_vec, l.B)
 
+		// Set t at xj
 		l.X_vec.SetVec(j, t)
 
+		// Update B and N indices
 		l.B = utils.Swap(j, i, l.B)
 		l.N = utils.Swap(i, j, l.N)
 
 		iteration++
 
 		if DEBUG {
+			fmt.Fprintf(os.Stderr, "j = %v, zj = %v\n", j, l.Z_vec.AtVec(j))
+			fmt.Fprintf(os.Stderr, "i = %v, xi = %v\n", i, l.X_vec.AtVec(i))
+			fmt.Fprintf(os.Stderr, "t = %v\n", t)
+
 			time.Sleep(1 * time.Second)
 		}
 	}

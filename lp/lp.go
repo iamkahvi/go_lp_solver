@@ -178,7 +178,7 @@ func (lp LP) Make_Z_N() *mat.VecDense {
 	return &nv2
 }
 
-func (lp LP) Make_TX_B(j int) *mat.VecDense {
+func (lp LP) Make_DX_B(j int) *mat.VecDense {
 	n := mat.NewDense(lp.r, lp.r, nil)
 	n.Inverse(lp.A_B())
 
@@ -191,6 +191,23 @@ func (lp LP) Make_TX_B(j int) *mat.VecDense {
 	return v
 }
 
+func (lp LP) Make_DZ_N(u *mat.VecDense) *mat.VecDense {
+	ab := lp.A_B()
+	ab.Inverse(ab.T())
+
+	var rh mat.Dense
+	rh.Mul(ab, u)
+
+	an := lp.A_N()
+	var an2 mat.Dense
+	an2.Scale(-1, an.T())
+
+	var res mat.Dense
+	res.Mul(&an2, &rh)
+
+	return res.ColView(0).(*mat.VecDense)
+}
+
 func (lp LP) Make_X_B() *mat.VecDense {
 	// Setting xb
 	n1 := mat.NewDense(lp.r, lp.r, nil)
@@ -200,17 +217,4 @@ func (lp LP) Make_X_B() *mat.VecDense {
 	xb.MulVec(n1, lp.B_vec)
 
 	return xb
-}
-
-func (lp LP) Make_Theta_X_B(j int) *mat.VecDense {
-	col := make([]float64, lp.r)
-	mat.Col(col, j, lp.A)
-
-	nv := mat.NewVecDense(lp.r, col)
-	n := mat.NewDense(lp.r, lp.r, nil)
-
-	n.Inverse(lp.A_B())
-	nv.MulVec(n, nv)
-
-	return nv
 }
