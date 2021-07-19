@@ -47,6 +47,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Solve Aux\n")
 		l_aux := l.CloneAux()
 		_, _, _ = sp.DualSimplex(l_aux, DEBUG)
+		fmt.Fprintf(os.Stderr, "Solved Aux\n")
 		l.B = l_aux.B
 		l.N = l_aux.N
 		res, opt, x = sp.PrimalSimplex(l, DEBUG)

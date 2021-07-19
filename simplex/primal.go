@@ -11,7 +11,7 @@ import (
 	mat "gonum.org/v1/gonum/mat"
 )
 
-const EPSILON = 0
+const EPSILON = 1e-6
 
 type Result int
 
@@ -28,7 +28,7 @@ func PrimalSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 	l.X_vec = utils.Set_V(l.Make_X_B(), l.X_vec, l.B)
 	l.X_vec = utils.Set_V(mat.NewVecDense(len(l.N), nil), l.X_vec, l.N)
 
-	if mat.Min(l.X_B()) < EPSILON {
+	if mat.Min(l.X_B()) < -EPSILON {
 		return Infeasible, 0, nil
 	}
 
@@ -43,7 +43,7 @@ func PrimalSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 		l.Z_vec = utils.Set_V(l.Make_Z_N(), l.Z_vec, l.N)
 
 		// Check for optimality
-		if mat.Min(l.Z_N()) >= EPSILON {
+		if mat.Min(l.Z_N()) >= -EPSILON {
 			matr := mat.NewDense(1, 1, nil)
 			matr.Mul(l.C_B().T(), l.Make_X_B())
 
@@ -66,7 +66,7 @@ func PrimalSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 		// Bland's rule
 		var j int
 		for _, ind := range l.N {
-			if l.Z_vec.AtVec(ind) < EPSILON {
+			if l.Z_vec.AtVec(ind) < -EPSILON {
 				j = ind
 				break
 			}

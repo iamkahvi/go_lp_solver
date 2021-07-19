@@ -18,7 +18,7 @@ func DualSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 	l.Z_vec = utils.Set_V(mat.NewVecDense(len(l.B), nil), l.Z_vec, l.B)
 	l.Z_vec = utils.Set_V(l.Make_Z_N(), l.Z_vec, l.N)
 
-	if mat.Min(l.Z_N()) < EPSILON {
+	if mat.Min(l.Z_N()) < -EPSILON {
 		return Infeasible, 0, nil
 	}
 
@@ -33,7 +33,7 @@ func DualSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 		l.X_vec = utils.Set_V(mat.NewVecDense(len(l.N), nil), l.X_vec, l.N)
 
 		// Check for optimality
-		if mat.Min(l.X_B()) >= EPSILON {
+		if mat.Min(l.X_B()) >= -EPSILON {
 			matr := mat.NewDense(1, 1, nil)
 			matr.Mul(l.C_B().T(), l.Make_X_B())
 
@@ -52,7 +52,7 @@ func DualSimplex(l *lp.LP, DEBUG bool) (Result, float64, []float64) {
 		// Bland's rule
 		var i int
 		for _, ind := range l.B {
-			if l.X_vec.AtVec(ind) < EPSILON {
+			if l.X_vec.AtVec(ind) < -EPSILON {
 				i = ind
 				break
 			}
