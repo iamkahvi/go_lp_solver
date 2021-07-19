@@ -3,7 +3,7 @@
 Repo for development of a programming project for CSC445: OPERATIONS RESEARCH: LINEAR PROGRAMMING in Summer 2021.
 
 ## Usage
-`go build`  
+`rm ._main.go && go build`  
 `./solver < [lp]`
 
 ## Implementation
