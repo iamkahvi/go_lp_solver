@@ -107,17 +107,19 @@ func (lp LP) Print() {
 
 	// Debug("A", lp.A)
 
-	// Debug("A_B", lp.A_B())
+	Debug("A_B", lp.A_B())
 	// Debug("A_N", lp.A_N())
 
 	Debug("x_B", lp.X_B())
 	Debug("z_N", lp.Z_N())
 
-	// Debug("b", lp.B_vec)
+	Debug("b", lp.B_vec)
 	// Debug("c", lp.C_vec)
 
-	// Debug("X", lp.X_vec)
-	// Debug("Z", lp.Z_vec)
+	Debug("c_B", lp.C_B())
+
+	Debug("X", lp.X_vec)
+	Debug("Z", lp.Z_vec)
 }
 
 func Debug(s string, m mat.Matrix) {

@@ -39,12 +39,15 @@ func main() {
 
 	if l.Is_Primal_Feasible() {
 		fmt.Fprintf(os.Stderr, "Primal Feasible\n")
+
 		res, opt, x = sp.PrimalSimplex(l, DEBUG)
 	} else if l.Is_Dual_Feasible() {
 		fmt.Fprintf(os.Stderr, "Dual Feasible\n")
+
 		res, opt, x = sp.DualSimplex(l, DEBUG)
 	} else {
 		fmt.Fprintf(os.Stderr, "Solve Aux\n")
+
 		l_aux := l.CloneAux()
 		_, _, _ = sp.DualSimplex(l_aux, DEBUG)
 		fmt.Fprintf(os.Stderr, "Solved Aux\n")
