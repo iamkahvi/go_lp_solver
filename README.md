@@ -4,7 +4,23 @@ This application is a simple linear program solver built for CSC445: OPERATIONS 
 
 ## Usage
 `rm ._main.go && go build`  
-`./solver < [lp]`
+`./solver < [lp file]`
+
+## Example input
+```
+13       12        9
+0.5      0.4       0.4     10
+0.3      0         0       5
+0.1      0.2       0.4     10
+0        0.3       0       1
+0        0.1       0.2     2
+```
+gives: 
+```
+optimal
+264.1667
+16.66667 3.333333 0.8333333
+```
 
 ## Implementation
 This program is an implementation of the Revised Simplex Method using Bland's Rule for pivoting.
@@ -20,7 +36,7 @@ I have three packages `utils`, `lp` and `simplex`.
 ## Tests
 `sh test.sh`
 
-At time of submission:
-- All the vanderbei tests are passing except vanderbei_example14.1.txt. 
-- Three netlib tests are passing (netlib_bgprtr.txt, netlib_itest2.txt and netlib_itest6.txt), the others cycle or don't return a correct result. 
-- All the volume 2 tests are passing except optimal_3x3_6.txt due to some floating point error.
+## To Do
+- Solve linear equations instead of doing inverse.
+- Solve test cases `optimal_3x3_6.txt`, `netlib_share2b.txt`, `netlib_share1b.txt`, `netlib_adlittle.txt` and `netlib_afiro.txt`.
+- Correct unwanted cycling on `netlib_klein2.txt`.
