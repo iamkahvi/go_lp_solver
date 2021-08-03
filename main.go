@@ -4,11 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strconv"
-	s "strings"
 
 	"example.com/solver/lp"
 	sp "example.com/solver/simplex"
+	utils "example.com/solver/utils"
 )
 
 const DEBUG bool = false
@@ -21,13 +20,12 @@ func main() {
 		lines = append(lines, scanner.Text())
 	}
 
-	if len(lines) <= 1 {
+	m, r, c := utils.ParseLines(lines)
+
+	if r <= 1 {
 		fmt.Printf("Usage 'go run main.go < [file]'\n")
 		os.Exit(0)
 	}
-
-	r, c := getDims(lines)
-	m := parseElements(lines, r, c)
 
 	l := lp.New(m, r, c)
 
@@ -66,46 +64,10 @@ func main() {
 	}
 }
 
-func parseElements(lines []string, rows int, cols int) [][]float64 {
-	numbers := make([][]float64, rows)
-
-	for i, line := range lines {
-		els := s.Fields(line)
-
-		numbers[i] = make([]float64, cols)
-
-		for j, str := range els {
-			val, err := strconv.ParseFloat(str, 64)
-			if err != nil {
-				panic(err)
-			}
-			numbers[i][j] = val
-		}
-	}
-
-	return numbers
-}
-
-func getDims(lines []string) (int, int) {
-	rows := 0
-	cols := 0
-	for _, line := range lines {
-		l := len(s.Fields(line))
-		if l > 1 {
-			rows += 1
-		}
-		if l > cols {
-			cols = l
-		}
-	}
-
-	return rows, cols
-}
-
 func print_arr(arr []float64) string {
 	var str string
 	for i, xi := range arr {
-		if xi < 1e-10 {
+		if xi < sp.EPSILON {
 			str += "0"
 		} else {
 			str += fmt.Sprintf("%.7g", xi)

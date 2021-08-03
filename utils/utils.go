@@ -2,10 +2,45 @@ package utils
 
 import (
 	"math"
+	"strconv"
+
+	s "strings"
 
 	"gonum.org/v1/gonum/blas/blas64"
 	mat "gonum.org/v1/gonum/mat"
 )
+
+func ParseLines(lines []string) ([][]float64, int, int) {
+	rows := 0
+	cols := 0
+	for _, line := range lines {
+		l := len(s.Fields(line))
+		if l > 1 {
+			rows += 1
+		}
+		if l > cols {
+			cols = l
+		}
+	}
+
+	numbers := make([][]float64, rows)
+
+	for i, line := range lines {
+		els := s.Fields(line)
+
+		numbers[i] = make([]float64, cols)
+
+		for j, str := range els {
+			val, err := strconv.ParseFloat(str, 64)
+			if err != nil {
+				panic(err)
+			}
+			numbers[i][j] = val
+		}
+	}
+
+	return numbers, rows, cols
+}
 
 func Swap(in int, out int, arr []int) []int {
 	for i, el := range arr {
