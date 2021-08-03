@@ -29,6 +29,9 @@ func main() {
 
 	l := lp.New(m, r, c)
 
+	// Perturbation method?
+	// l.B_vec.ScaleVec(lp.EPSILON, l.B_vec)
+
 	var res sp.Result
 	var opt float64
 	var x []float64
@@ -67,7 +70,7 @@ func main() {
 func print_arr(arr []float64) string {
 	var str string
 	for i, xi := range arr {
-		if xi < sp.EPSILON {
+		if xi < 1e-3 {
 			str += "0"
 		} else {
 			str += fmt.Sprintf("%.7g", xi)

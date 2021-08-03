@@ -105,16 +105,16 @@ func (lp LP) Print() {
 	fmt.Fprintf(os.Stderr, " B = %v\n\n", lp.B)
 	fmt.Fprintf(os.Stderr, " N = %v\n\n", lp.N)
 
-	// Debug("A", lp.A)
+	Debug("A", lp.A)
 
 	Debug("A_B", lp.A_B())
-	// Debug("A_N", lp.A_N())
+	Debug("A_N", lp.A_N())
 
 	Debug("x_B", lp.X_B())
 	Debug("z_N", lp.Z_N())
 
 	Debug("b", lp.B_vec)
-	// Debug("c", lp.C_vec)
+	Debug("c", lp.C_vec)
 
 	Debug("c_B", lp.C_B())
 
@@ -168,58 +168,56 @@ func (lp LP) Is_Dual_Feasible() bool {
 }
 
 func (lp LP) Make_Z_N() *mat.VecDense {
-	var n mat.Dense
-	n.Inverse(lp.A_B())
+	var v mat.VecDense
+	v.SolveVec(lp.A_B().T(), lp.C_B())
 
-	var n2 mat.Dense
-	n2.Mul(&n, lp.A_N())
+	var temp mat.VecDense
+	temp.MulVec(lp.A_N().T(), &v)
 
-	var nv mat.VecDense
-	nv.MulVec(n2.T(), lp.C_B())
+	var zn mat.VecDense
+	zn.SubVec(&temp, lp.C_N())
 
-	var nv2 mat.VecDense
-	nv2.SubVec(&nv, lp.C_N())
-
-	return &nv2
+	return &zn
 }
 
 func (lp LP) Make_DX_B(j int) *mat.VecDense {
-	n := mat.NewDense(lp.r, lp.r, nil)
-	n.Inverse(lp.A_B())
+	var dxB mat.VecDense
 
-	aj := lp.A.ColView(j)
-	//  Get_M(lp.A, []int{j}).ColView(0)
+	dxB.SolveVec(lp.A_B(), lp.A.ColView(j))
 
-	v := mat.NewVecDense(aj.Len(), nil)
-	v.MulVec(n, aj)
-
-	return v
+	return &dxB
 }
 
 func (lp LP) Make_DZ_N(u *mat.VecDense) *mat.VecDense {
-	ab := lp.A_B()
-	ab.Inverse(ab.T())
+	var temp mat.Dense
+	temp.Inverse(lp.A_B().T())
 
-	var rh mat.Dense
-	rh.Mul(ab, u)
+	var rh mat.VecDense
+	rh.MulVec(&temp, u)
 
-	an := lp.A_N()
-	var an2 mat.Dense
-	an2.Scale(-1, an.T())
+	var negA_NT mat.Dense
+	negA_NT.Scale(-1, lp.A_N().T())
 
-	var res mat.Dense
-	res.Mul(&an2, &rh)
+	var res mat.VecDense
+	res.MulVec(&negA_NT, &rh)
 
-	return res.ColView(0).(*mat.VecDense)
+	return &res
+
+	// var negA_NT mat.Dense
+	// negA_NT.Scale(-1, lp.A_N().T())
+
+	// var temp mat.VecDense
+	// temp.MulVec(&negA_NT, u)
+
+	// var dzN mat.VecDense
+	// dzN.SolveVec(lp.A_B().T(), &temp)
+
+	// return &dzN
 }
 
 func (lp LP) Make_X_B() *mat.VecDense {
-	// Setting xb
-	n1 := mat.NewDense(lp.r, lp.r, nil)
-	n1.Inverse(lp.A_B())
-
 	xb := mat.NewVecDense(lp.r, nil)
-	xb.MulVec(n1, lp.B_vec)
+	xb.SolveVec(lp.A_B(), lp.B_vec)
 
 	return xb
 }

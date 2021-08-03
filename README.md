@@ -37,6 +37,8 @@ I have three packages `utils`, `lp` and `simplex`.
 `sh test.sh`
 
 ## To Do
-- Solve linear equations instead of doing inverse.
+- Solve linear equations instead of doing inverse. DONE
+    - except the dzn calculation https://github.com/iamkahvi/CSC445_project/blob/c4dfc95df9d7a72c5a4c3e4d850b67c2a085b016/lp/lp.go#L206
 - Solve test cases `optimal_3x3_6.txt`, `netlib_share2b.txt`, `netlib_share1b.txt`, `netlib_adlittle.txt` and `netlib_afiro.txt`.
 - Correct unwanted cycling on `netlib_klein2.txt`.
+    - Perturbation method https://github.com/iamkahvi/CSC445_project/blob/eabc4d09c3d6513eedbfa5ff9f6f21ecdbc0ce46/main.go#L32
