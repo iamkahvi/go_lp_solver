@@ -1,5 +1,12 @@
 #!/bin/bash
 
+trap ctrl_c INT
+
+function ctrl_c() {
+    echo "done"
+    exit
+}
+
 cd ./test_LPs/input/
 
 # # go --version
